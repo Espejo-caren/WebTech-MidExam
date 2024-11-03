@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoe Ordering Page</title>
+    <style>
+        /* Basic reset and page layout */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        /* Navbar styling */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+        }
+
+        .cart-icon {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cart-icon span {
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background-color: red;
+            color: #fff;
+            border-radius: 50%;
+            padding: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Product grid styling */
+        .product-grid {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .product-card {
+            width: 200px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .product-card:hover {
+            transform: scale(1.05);
+        }
+
+        .product-card img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .product-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .product-card p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        /* Cart and order summary */
+        .cart {
+            display: none; /* Hide cart by default */
+            margin-top: 30px;
+            width: 100%;
+            max-width: 500px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .cart-item p {
+            margin: 0;
+        }
+
+        .cart-total {
+            text-align: right;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 10px 0;
+        }
+
+        .checkout-btn {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .checkout-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Quantity button styling */
+        .quantity-buttons {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quantity-btn {
+            padding: 5px;
+            font-size: 1rem;
+            background-color: #ddd;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .quantity-btn:hover {
+            background-color: #bbb;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar with Cart Icon -->
+    <div class="navbar">
+        <h1>Shoe Store</h1>
+        <div class="cart-icon" onclick="toggleCart()">
+            <span>🛒 Cart</span>
+            <div class="cart-count" id="cart-count">0</div>
+        </div>
+    </div>
+
+    <h1>Order Your Shoes</h1>
+
+    <!-- Product Grid -->
+    <div class="product-grid" id="product-grid">
+        <!-- Sample items -->
+        <div class="product-card" onclick="addToCart('Men\'s Running Shoes', 50)">
+            <img src="sample1.jpg" alt="Men's Running Shoes">
+            <h3>Men's Running Shoes</h3>
+            <p>$50</p>
+        </div>
+        <div class="product-card" onclick="addToCart('Women\'s Casual Sneakers', 45)">
+            <img src="sample2.jpg" alt="Women's Casual Sneakers">
+            <h3>Women's Casual Sneakers</h3>
+            <p>$45</p>
+        </div>
+        <div class="product-card" onclick="addToCart('Men\'s Leather Boots', 80)">
+            <img src="sample3.jpg" alt="Men's Leather Boots">
+            <h3>Men's Leather Boots</h3>
+            <p>$80</p>
+        </div>
+        <div class="product-card" onclick="addToCart('Women\'s High Heels', 70)">
+            <img src="sample4.jpg" alt="Women's High Heels">
+            <h3>Women's High Heels</h3>
+            <p>$70</p>
+        </div>
+    </div>
+
+    <!-- Cart Section -->
+    <div class="cart" id="cart">
+        <h2>Your Cart</h2>
+        <div id="cart-items"></div>
+        <p class="cart-total" id="cart-total">Total: $0</p>
+        <button class="checkout-btn" onclick="checkout()">Checkout</button>
+    </div>
+
+    <script>
+        // Cart functionality
+        const cart = [];
+        const discountThreshold = 2;
+        const discountRate = 0.1;
+
+        function toggleCart() {
+            const cartElement = document.getElementById("cart");
+            cartElement.style.display = cartElement.style.display === "none" ? "block" : "none";
+        }
+
+        function addToCart(name, price) {
+            const item = cart.find(product => product.name === name);
+            if (item) {
+                item.quantity++;
+            } else {
+                cart.push({ name, price, quantity: 1 });
+            }
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartItemsContainer = document.getElementById("cart-items");
+            cartItemsContainer.innerHTML = ""; // Clear existing items
+
+            let total = 0;
+            cart.forEach((item, index) => {
+                let itemTotal = item.price * item.quantity;
+                if (item.quantity >= discountThreshold) {
+                    itemTotal -= itemTotal * discountRate;
+                }
+
+                total += itemTotal;
+
+                const cartItem = document.createElement("div");
+                cartItem.classList.add("cart-item");
+                cartItem.innerHTML = `
+                    <p>${item.name}</p>
+                    <div class="quantity-buttons">
+                        <button class="quantity-btn" onclick="changeQuantity(${index}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="quantity-btn" onclick="changeQuantity(${index}, 1)">+</button>
+                    </div>
+                    <p>$${itemTotal.toFixed(2)}</p>
+                `;
+                cartItemsContainer.appendChild(cartItem);
+            });
+
+            document.getElementById("cart-total").innerText = `Total: $${total.toFixed(2)}`;
+            document.getElementById("cart-count").innerText = cart.reduce((acc, item) => acc + item.quantity, 0);
+        }
+
+        function changeQuantity(index, amount) {
+            if (cart[index].quantity + amount > 0) {
+                cart[index].quantity += amount;
+            } else {
+                cart.splice(index, 1); // Remove item if quantity drops to zero
+            }
+            updateCart();
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert("Your cart is empty!");
+                return;
+            }
+            alert("Order placed successfully! Total: $" + document.getElementById("cart-total").innerText.split("$")[1]);
+            cart.length = 0; // Clear cart
+            updateCart(); // Update the cart display
+            toggleCart(); // Close cart after checkout
+        }
+    </script>
+
+</body>
+</html>
